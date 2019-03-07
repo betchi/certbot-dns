@@ -1,15 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+export baseUrl="https://api.cloudflare.com/client/v4"
 
 args_domain=""
 args_email=""
 FLAG_F_DOMAIN=true
+
 domain() {
   args_domain="${args_domain} -d $1"
   if $FLAG_F_DOMAIN ; then
      FLAG_F_DOMAIN=false
      first_domain=`echo $1 | sed -e "s/\*\.//"`
-  fi  
+  fi
 }
+
 mail() {
   args_email="--email $1"
 }
@@ -43,14 +47,9 @@ if [ "$args_email" == "" ]; then
 fi
 
 certbot certonly --manual \
---agree-tos \
---preferred-challenges dns \
---manual-auth-hook /aws/auth.sh \
---manual-cleanup-hook /aws/clean.sh \
---server https://acme-v02.api.letsencrypt.org/directory \
-$args_email $args_domain &> tmp_result
-
-cat "/etc/letsencrypt/live/$first_domain/fullchain.pem" || cat tmp_result 
-cat "/etc/letsencrypt/live/$first_domain/privkey.pem"
-
-
+  --agree-tos \
+  --preferred-challenges dns \
+  --manual-auth-hook /script/auth.sh \
+  --manual-cleanup-hook /script/cleanup.sh \
+  --server https://acme-v02.api.letsencrypt.org/directory \
+  $args_email $args_domain

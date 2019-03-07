@@ -1,16 +1,8 @@
 FROM certbot/certbot:latest
-RUN \
-  mkdir -p /aws && \
-  apk -Uuv add groff less && \
-  pip install awscli && \
-  rm /var/cache/apk/*
 
-RUN apk -Uuv add bash
+RUN apk add --update \
+  && apk --no-cache add curl jq bash
 
-COPY auth.sh /aws/
-COPY clean.sh /aws/
-COPY entry.sh /aws/
+WORKDIR /script
 
-WORKDIR /aws
-
-ENTRYPOINT ["/aws/entry.sh"]
+ENTRYPOINT ["/script/entry.sh"]

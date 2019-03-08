@@ -1,21 +1,17 @@
 #!/usr/bin/env bash
 
-export baseUrl="https://api.cloudflare.com/client/v4"
-
-args_domain=""
-args_email=""
+targetDomain=""
+cfEmail=""
 FLAG_F_DOMAIN=true
-
 domain() {
-  args_domain="${args_domain} -d $1"
+  targetDomain="${targetDomain} -d $1"
   if $FLAG_F_DOMAIN ; then
      FLAG_F_DOMAIN=false
      first_domain=`echo $1 | sed -e "s/\*\.//"`
   fi
 }
-
 mail() {
-  args_email="--email $1"
+  cfEmail="--email $1"
 }
 
 while getopts :m:d:h OPT
@@ -29,27 +25,39 @@ do
             ;;
         \?) usage_exit
             ;;
-	:) echo "Option -$OPTARG requires an argument." >&2
-	   exit 1
-	   ;;
+        :) echo "Option -$OPTARG requires an argument." >&2
+           exit 1
+           ;;
     esac
 done
 shift $((OPTIND - 1))
 
-if [ "$args_domain" == "" ]; then
+if [ -z "$targetDomain" ]; then
   echo "Option -d is required" >&2
   exit 1
 fi
 
-if [ "$args_email" == "" ]; then
+if [ -z "$cfEmail" ]; then
   echo "Option -m is required" >&2
   exit 1
 fi
 
+certbotServer=https://acme-v02.api.letsencrypt.org/directory
+if [ -n "$STAGING" ]; then
+  if [ $STAGING = "true" ]; then
+    certbotServer=https://acme-staging.api.letsencrypt.org/directory
+  fi
+fi
+echo "Certbot Server=$certbotServer"
+
 certbot certonly --manual \
+  --non-interactive \
   --agree-tos \
   --preferred-challenges dns \
-  --manual-auth-hook /script/auth.sh \
-  --manual-cleanup-hook /script/cleanup.sh \
-  --server https://acme-v02.api.letsencrypt.org/directory \
-  $args_email $args_domain
+  --manual-auth-hook ./auth.sh \
+  --manual-cleanup-hook ./cleanup.sh \
+  --server $certbotServer \
+  --break-my-certs \
+  $cfEmail $targetDomain
+
+rm -f tmp_result

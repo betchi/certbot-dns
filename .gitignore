@@ -1,0 +1,7 @@
+etc/letsencrypt/accounts
+etc/letsencrypt/archive
+etc/letsencrypt/csr
+etc/letsencrypt/keys
+etc/letsencrypt/live
+etc/letsencrypt/renewal
+etc/letsencrypt/renewal-hooks
